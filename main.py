@@ -1,3 +1,5 @@
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import *
 from os import system
 
@@ -64,6 +66,9 @@ class Template(QWidget):
 
         self.sendBtn = Button("Send", self)
         self.sendBtn.move(300, 410)
+
+        enter_shortcut = QShortcut(QKeySequence(Qt.Key_Return), self)
+        enter_shortcut.activated.connect(self.sendBtn.click)
 
         self.setFixedSize(490, 500)
         self.move(x, y)
