@@ -1,6 +1,8 @@
 from PyQt5.QtWidgets import *
 from os import system
+
 system("cls")
+
 
 class Button(QPushButton):
     def __init__(self, text: str, oyna: QWidget):
@@ -70,21 +72,22 @@ class Template(QWidget):
         self.clearAll = QMessageBox()
         self.clearAll.setText("Ikkala tarafdan ham o'chirilsinmi ?")
         self.clearAll.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-    
+
 
 class Chat:
     def __init__(self, user_1: Template, user_2: Template):
         self.user_1 = user_1
         self.user_2 = user_2
+        self.status = None
 
         self.user_1.label.setText(user_2.name)
         self.user_2.label.setText(user_1.name)
-        
+
         self.user_1.label.adjustSize()
         self.user_2.label.adjustSize()
 
-        self.user_1.sendBtn.clicked.connect(lambda: self.sendMessage(user_1, user_2))
-        self.user_2.sendBtn.clicked.connect(lambda: self.sendMessage(user_2, user_1))
+        self.user_1.sendBtn.clicked.connect(lambda: self.sendMessage(user_1, user_2, self.status))
+        self.user_2.sendBtn.clicked.connect(lambda: self.sendMessage(user_2, user_1, self.status))
 
         self.user_1.editBtn.clicked.connect(lambda: self.editMessage(user_1, user_2))
         self.user_2.editBtn.clicked.connect(lambda: self.editMessage(user_2, user_1))
@@ -95,27 +98,43 @@ class Chat:
         self.user_1.clearAll.buttonClicked.connect(self.func_1)
         self.user_2.clearAll.buttonClicked.connect(self.func_2)
 
-    def sendMessage(self, from_user: Template, to_user: Template):
-        txt = from_user.input.text().strip()
+    def sendMessage(self, from_user: Template, to_user: Template, r: int):
+        if r is None:
+            txt = from_user.input.text().strip()
 
-        if txt == "":
+            if txt == "":
+                from_user.input.clear()
+                return
+
+            from_user.messages.addItem(QListWidgetItem(f"You: {txt}"))
+            to_user.messages.addItem(QListWidgetItem(f"{from_user.name}: {txt}"))
+
             from_user.input.clear()
-            return
-    
-        from_user.messages.addItem(QListWidgetItem(f"You: {txt}"))
-        to_user.messages.addItem(QListWidgetItem(f"{from_user.name}: {txt}"))
-        
-        from_user.input.clear()
+        else:
+            txt = from_user.input.text().strip()
 
-    def editMessage(self, from_user: QListWidget, to_user: QListWidget):
+            if txt == "":
+                from_user.input.clear()
+                return
+
+            from_user.messages.item(r).setText(f"You: {txt}")
+            to_user.messages.item(r).setText(f"{from_user.name}: {txt}")
+            self.status = None
+
+            from_user.input.clear()
+
+    def editMessage(self, from_user: Template, to_user: Template):
         lst = from_user.messages.selectedItems()
         if not lst: return
+
+        for i in range(from_user.messages.count()):
+            if from_user.messages.item(i) == lst[0]:
+                self.status = i
+                break
+
         for item in lst:
             if item.text().count(to_user.name) > 0: return
             from_user.input.setText(item.text()[5:])
-            # print(item)
-            
-            
 
     def func_1(self, btn) -> bool:
         txt = btn.text()
@@ -131,7 +150,6 @@ class Chat:
 
     def clearMessages(self, user: Template):
         user.clearAll.exec_()
-
 
 
 app = QApplication([])
